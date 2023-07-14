@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html ng-app="seatReservationApp">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Seat Reservation</title>
+    <style>
+      .seat {
+        width: 30px;
+        height: 30px;
+        margin: 5px;
+      }
+
+      .available {
+        background-color: green;
+      }
+
+      .reserved {
+        background-color: red;
+      }
+    </style>
+  </head>
+
+  <body ng-controller="seatReservationController">
+    <h1>Seat Reservation</h1>
+
+    <div>
+      <label for="numSeats">Number of seats:</label>
+      <input type="number" id="numSeats" ng-model="numSeats" />
+      <button ng-click="reserveSeats()">Reserve</button>
+    </div>
+
+    <div>
+      <h2>Coach Layout</h2>
+      <div ng-repeat="row in coach">
+        <div
+          ng-repeat="seat in row"
+          ng-class="{
+            seat: true,
+            available: seat.available,
+            reserved: !seat.available
+          }"
+        >
+          {{ $index + 1 }}
+        </div>
+      </div>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <script>
+      angular.module('seatReservationApp', [])
+        .controller('seatReservationController', function($scope) {
+          // Initialize the coach layout
+          $scope.coach = [
+            [{ available: true }, { available: true }, { available: true }, { available: true }, { available: true }, { available: true }, { available: true }],
+            [{ available: true }, { available: true }, { available: true }, { available: true }, { available: true }, { available: true }, { available: true }],
+            [{ available: true }, { available: true }, { available: true }, { available: true }, { available: true }, { available: true }, { available: true }],
+            [{ available: true }, { available: true }, { available: true }, { available: true }, { available: true }, { available: true }, { available: true }],
+            [{ available: true }, { available: true }, { available: true }, { available: true }, { available: true }, { available: true }, { available: true }],
+            [{ available: true }, { available: true }, { available: true }, { available: true }, { available: true }, { available: true }, { available: true }],
+            [{ available: true }, { available: true }, { available: true }]
+          ];
+
+          // Function to reserve seats
+          $scope.reserveSeats = function() {
+            var seatsToReserve = $scope.numSeats;
+            var reservedSeats = [];
+
+            for (var i = 0; i < $scope.coach.length; i++) {
+              var row = $scope.coach[i];
+
+              // Check if consecutive seats are available
+              var consecutiveSeats = findConsecutiveSeats(row, seatsToReserve);
+              if (consecutiveSeats.length === seatsToReserve) {
+                reserveSeatsInRow(row, consecutiveSeats);
+                reservedSeats = reservedSeats.concat(consecutiveSeats);
+                break;
+              }
+
+              // Check nearby seats
+              var nearbySeats = findNearbySeats(row, seatsToReserve);
+              if (nearbySeats.length === seatsToReserve) {
+                reserveSeatsInRow(row, nearbySeats);
+                reservedSeats = reservedSeats.concat(nearbySeats);
+                break;
+              }
+            }
+
+            // Update UI and display reserved seats
+            alert("Reserved seats: " + reservedSeats.join(", "));
+          };
+
+          // Helper function to find consecutive seats in a row
+          function findConsecutiveSeats(row, numSeats) {
+            var consecutiveSeats = [];
+            var count = 0;
+
+            for (var i = 0; i < row.length; i++) {
+              if (row[i].available) {
+                consecutiveSeats.push(i + 1);
+                count++;
+
+                if (count === numSeats) {
+                  break;
+                }
+              } else {
+                consecutiveSeats = [];
+                count = 0;
+              }
+            }
+
+            return consecutiveSeats;
+          }
+
+          // Helper function to find nearby seats in a row
+          function findNearbySeats(row, numSeats) {
+            var nearbySeats = [];
+            var startIndex = -1;
+
+            for (var i = 0; i < row.length; i++) {
+              if (row[i].available) {
+                startIndex = i;
+                break;
+              }
+            }
+
+            if (startIndex !== -1) {
+              for (var j = startIndex; j < startIndex + numSeats; j++) {
+                if (row[j].available) {
+                  nearbySeats.push(j + 1);
+                } else {
+                  nearbySeats = [];
+                  break;
+                }
+              }
+            }
+
+            return nearbySeats;
+          }
+
+          // Helper function to reserve seats in a row
+          function reserveSeatsInRow(row, seats) {
+            for (var i = 0; i < seats.length; i++) {
+              row[seats[i] - 1].available = false;
+            }
+          }
+        });
+    </script>
+  </body>
+</html>
